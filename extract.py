@@ -12,23 +12,25 @@ import ipycytoscape
 import ipywidgets
 import pandas as pd
 from neptune_graph import NeptuneGraphManager
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class KnowledgeGraphExtractor:
-    def __init__(self, api_key=None, api_base=None, model_name="deepseek-chat", neptune_endpoint=None):
+    def __init__(self, api_key=None, api_base=None, model_name=None, neptune_endpoint=None):
         """Initialize the Knowledge Graph Extractor with API credentials and model settings."""
         # API Configuration
-        os.environ['OPENAI_API_KEY'] = "sk-d7fd382ee991446481365d793bd034f4"
-        os.environ['OPENAI_API_BASE'] = 'https://api.deepseek.com'
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.api_base = api_base or os.getenv("OPENAI_API_BASE")
-        self.model_name = model_name
+        self.model_name = model_name or os.getenv("MODEL_NAME", "deepseek-chat")
         
         # Validate API key
         if not self.api_key:
             raise ValueError(
                 "API key is required. Please provide it either:\n"
                 "1. As an argument: KnowledgeGraphExtractor(api_key='your-key')\n"
-                "2. Through environment variable: export OPENAI_API_KEY='your-key'"
+                "2. Through environment variable OPENAI_API_KEY in .env file"
             )
         
         # Initialize OpenAI client
@@ -41,12 +43,12 @@ class KnowledgeGraphExtractor:
             raise ValueError(f"Failed to initialize OpenAI client: {str(e)}")
         
         # LLM Configuration
-        self.llm_temperature = 0.0  # Lower temperature for more deterministic output
-        self.llm_max_tokens = 4096
+        self.llm_temperature = float(os.getenv("LLM_TEMPERATURE", 0.0))
+        self.llm_max_tokens = int(os.getenv("LLM_MAX_TOKENS", 4096))
         
         # Chunking Configuration
-        self.chunk_size = 150  # Number of words per chunk
-        self.overlap = 30      # Number of words to overlap between chunks
+        self.chunk_size = int(os.getenv("CHUNK_SIZE", 150))  # Number of words per chunk
+        self.overlap = int(os.getenv("OVERLAP", 30))      # Number of words to overlap between chunks
 
         # Storage for results
         self.chunks = []
@@ -55,6 +57,7 @@ class KnowledgeGraphExtractor:
 
         # Initialize Neptune connection if endpoint is provided
         self.neptune_manager = None
+        neptune_endpoint = neptune_endpoint or os.getenv("NEPTUNE_ENDPOINT")
         if neptune_endpoint:
             try:
                 self.neptune_manager = NeptuneGraphManager(neptune_endpoint=neptune_endpoint)
