@@ -1,0 +1,10 @@
+openai>=1.75.0
+networkx>=3.4.2
+ipycytoscape>=1.3.3
+ipywidgets>=8.1.6
+pandas>=2.2.3 
+gremlinpython 
+boto3 
+networkx 
+matplotlib 
+ipycytoscape
